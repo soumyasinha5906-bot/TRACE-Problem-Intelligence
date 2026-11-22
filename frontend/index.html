@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRACE — Problem Intelligence</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script defer src="/js/app.js"></script>
+</head>
+<body>
+  <div id="authView" class="auth-shell">
+    <div class="auth-card">
+      <div class="brand-mark">T</div>
+      <p class="eyebrow">PROBLEM INTELLIGENCE PLATFORM</p>
+      <h1>Welcome to <span>TRACE</span></h1>
+      <p class="muted">Turn scattered reports into actionable insight.</p>
+      <div class="tabs">
+        <button class="tab active" data-auth-tab="login">Sign in</button>
+        <button class="tab" data-auth-tab="register">Create account</button>
+      </div>
+      <form id="loginForm" class="auth-form">
+        <label>Email<input name="email" type="email" required value="admin@trace.local"></label>
+        <label>Password<input name="password" type="password" required value="TraceDemo123!"></label>
+        <button class="primary full">Sign in to TRACE</button>
+      </form>
+      <form id="registerForm" class="auth-form hidden">
+        <label>Full name<input name="name" required placeholder="Your name"></label>
+        <label>Email<input name="email" type="email" required placeholder="you@example.com"></label>
+        <label>Password<input name="password" type="password" minlength="8" required placeholder="At least 8 characters"></label>
+        <button class="primary full">Create account</button>
+      </form>
+      <p id="authMessage" class="message"></p>
+      <p class="small muted">Demo: admin@trace.local · TraceDemo123!</p>
+    </div>
+  </div>
+
+  <div id="appView" class="app hidden">
+    <aside class="sidebar">
+      <a class="brand" href="#"><span class="brand-mark small-mark">T</span><span>TRACE<small>INTELLIGENCE</small></span></a>
+      <div class="side-label">WORKSPACE</div>
+      <button class="nav-item active" data-page="dashboard"><span>◫</span> Dashboard</button>
+      <button class="nav-item" data-page="reports"><span>▤</span> Reports</button>
+      <button class="nav-item" data-page="incidents"><span>⌘</span> Incidents</button>
+      <button class="nav-item" data-page="analytics"><span>▥</span> Analytics</button>
+      <div class="sidebar-bottom">
+        <div class="user-mini"><div class="avatar" id="userAvatar">T</div><div><strong id="userName">User</strong><small id="userRole">Member</small></div></div>
+        <button id="logoutBtn" class="nav-item">↪ Sign out</button>
+      </div>
+    </aside>
+
+    <main class="main">
+
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="pageEyebrow">OVERVIEW</p>
+          <h2 id="pageTitle">Dashboard</h2>
+        </div>
+
+        <div class="top-actions">
+
+          <!-- NOTIFICATION BELL -->
+          <div class="notification-wrapper">
+            <button
+              type="button"
+              id="notificationBell"
+              class="notification-bell"
+              aria-label="Notifications"
+            >
+               🔔
+              <span id="notificationCount" class="notification-count hidden">0</span>
+            </button>
+
+            <div id="notificationPanel" class="notification-panel hidden">
+
+              <div class="notification-panel-head">
+                <strong>Notifications</strong>
+                <button type="button" id="markAllRead" class="text-btn">
+                  Mark all read
+                </button>
+              </div>
+
+              <div id="notificationList">
+                <p class="empty">Loading notifications...</p>
+              </div>
+
+            </div>
+          </div>
+
+          <span class="live-pill"><i></i> LIVE SYSTEM</span>
+
+          <button class="primary" id="quickReport">
+            ＋ New report
+          </button>
+
+        </div>
+      </header>
+      <div id="toast" class="toast hidden"></div>
+
+      <section id="page-dashboard" class="page">
+        <div class="welcome-row"><div><h3>Good to see you.</h3><p class="muted">Here's what's happening across your workspace.</p></div><span class="date-label" id="todayLabel"></span></div>
+        <div class="stats-grid">
+          <article class="stat-card"><div class="stat-icon blue">▤</div><p>Total reports</p><strong id="statReports">0</strong><small>Submitted reports</small></article>
+          <article class="stat-card"><div class="stat-icon teal">⌘</div><p>Active incidents</p><strong id="statIncidents">0</strong><small>Require attention</small></article>
+          <article class="stat-card"><div class="stat-icon orange">⚑</div><p>High priority</p><strong id="statHigh">0</strong><small>Priority score ≥ 70</small></article>
+          <article class="stat-card"><div class="stat-icon green">✓</div><p>Resolved</p><strong id="statResolved">0</strong><small>Closed incidents</small></article>
+        </div>
+        <div class="content-grid">
+          <article class="panel"><div class="panel-head"><div><h3>Recent reports</h3><p>Latest incoming information</p></div><button class="text-btn" data-go="reports">View all →</button></div><div id="recentReports" class="report-list"></div></article>
+          <article class="panel"><div class="panel-head"><div><h3>Report categories</h3><p>Where problems are appearing</p></div></div><div id="categoryBars" class="category-bars"></div></article>
+        </div>
+        <article class="panel"><div class="panel-head"><div><h3>Live activity</h3><p>Updates from the TRACE system</p></div><span class="live-pill"><i></i> Streaming</span></div><div id="activityFeed" class="activity-feed"><p class="empty">Waiting for activity…</p></div></article>
+      </section>
+
+      <section id="page-reports" class="page hidden">
+        <div class="section-toolbar"><div><h3>All reports</h3><p class="muted">Capture and review incoming problems.</p></div><button class="primary" id="newReportBtn">＋ Submit report</button></div>
+        <div class="panel"><div class="filter-row"><input id="reportSearch" placeholder="Search reports…"><select id="reportFilter"><option value="">All categories</option><option>Network</option><option>Equipment</option><option>Facilities</option><option>Cleanliness</option><option>Library</option><option>Security</option><option>General</option></select></div><div class="table-wrap"><table><thead><tr><th>REPORT</th><th>CATEGORY</th><th>LOCATION</th><th>SEVERITY</th><th>STATUS</th><th>SUBMITTED BY</th></tr></thead><tbody id="reportsTable"></tbody></table></div></div>
+      </section>
+
+      <section id="page-incidents" class="page hidden">
+        <div class="section-toolbar"><div><h3>Incident explorer</h3><p class="muted">Related reports grouped into possible underlying issues.</p></div><button class="outline" id="refreshIncidents">↻ Refresh</button></div>
+        <div id="incidentGrid" class="incident-grid"></div>
+      </section>
+
+      <section id="page-analytics" class="page hidden">
+        <div class="section-toolbar"><div><h3>Analytics overview</h3><p class="muted">Understand the shape of reported problems.</p></div></div>
+        <div class="content-grid"><article class="panel"><div class="panel-head"><div><h3>Reports by category</h3><p>Distribution of submitted reports</p></div></div><div id="analyticsCategories" class="category-bars"></div></article><article class="panel"><div class="panel-head"><div><h3>Incident status</h3><p>Current resolution state</p></div></div><div id="analyticsStatuses" class="category-bars"></div></article></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="reportDialog" class="modal">
+    <form id="reportForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">NEW INFORMATION</p><h2>Submit a report</h2></div><button type="button" class="icon-btn" id="closeDialog">✕</button></div>
+      <label>Report title<input name="title" required maxlength="120" placeholder="e.g. Wi-Fi disconnects in Lab 3"></label>
+      <label>Description<textarea name="description" required maxlength="3000" rows="4" placeholder="Describe what happened, when, and who or what is affected…"></textarea></label>
+      <div class="form-grid"><label>Category<select name="category"><option>General</option><option>Network</option><option>Equipment</option><option>Facilities</option><option>Cleanliness</option><option>Library</option><option>Security</option></select></label><label>Severity<select name="severity"><option>Low</option><option selected>Medium</option><option>High</option></select></label></div>
+      <label>Location<input name="location" required placeholder="e.g. Block A - Lab 3"></label>
+      <div class="modal-actions"><button type="button" class="outline" id="cancelDialog">Cancel</button><button class="primary">Submit report</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="incidentDialog" class="modal wide-modal">
+    <div id="incidentDetail"></div>
+  </dialog>
+</body>
+</html>
